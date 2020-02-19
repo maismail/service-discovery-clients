@@ -20,9 +20,13 @@ package com.logicalclocks.servicediscoverclient.resolvers;
 import com.google.common.net.HostAndPort;
 import com.logicalclocks.servicediscoverclient.Builder;
 import com.logicalclocks.servicediscoverclient.ServiceDiscoveryClient;
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryGenericException;
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceNotFoundException;
 import com.logicalclocks.servicediscoverclient.service.Service;
 import com.logicalclocks.servicediscoverclient.service.ServiceQuery;
 import com.orbitz.consul.Consul;
+import com.orbitz.consul.ConsulException;
 import com.orbitz.consul.HealthClient;
 import com.orbitz.consul.model.health.ServiceHealth;
 import com.orbitz.consul.option.ImmutableQueryOptions;
@@ -34,37 +38,57 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class HttpResolver implements ServiceDiscoveryClient, Closeable {
-  private final Consul client;
+  private Consul client;
+  
+  
+  public HttpResolver() {}
+  
+  @Override
+  public void init(@NonNull Builder builder) throws ServiceDiscoveryGenericException {
+    if (builder.getClient() != null) {
+      this.client = builder.getClient();
+    } else {
+      this.client = createConsulClient(builder);
+    }
+  }
   
   @SuppressWarnings("UnstableApiUsage")
-  public HttpResolver(@NonNull Builder builder) {
-    HostAndPort hostAndPort = HostAndPort.fromParts(builder.getHttpHost(), builder.getHttpPort());
-    client = Consul.builder()
-        .withHostAndPort(hostAndPort)
-        .withHttps(builder.getHttps())
-        .withSslContext(builder.getSslContext())
-        .withHostnameVerifier(builder.getHostnameVerifier())
-        .build();
+  private Consul createConsulClient(Builder builder) throws ServiceDiscoveryGenericException {
+    try {
+      HostAndPort hostAndPort = HostAndPort.fromParts(builder.getHttpHost(), builder.getHttpPort());
+      return Consul.builder()
+          .withHostAndPort(hostAndPort)
+          .withHttps(builder.getHttps())
+          .withSslContext(builder.getSslContext())
+          .withHostnameVerifier(builder.getHostnameVerifier())
+          .build();
+    } catch (ConsulException ex) {
+      throw new ServiceDiscoveryGenericException("Could not initialize client", ex);
+    }
   }
   
   @Override
-  public List<Service> getService(@NonNull ServiceQuery service) throws ServiceNotFoundException {
-    HealthClient hc = client.healthClient();
-    QueryOptions queryOptions = ImmutableQueryOptions.builder()
-        .addAllTag(service.getTags())
-        .build();
-    List<ServiceHealth> services = hc.getHealthyServiceInstances(service.getName(), queryOptions).getResponse();
-    if (services.isEmpty()) {
-      throw new ServiceNotFoundException("Could not find service " + service);
+  public List<Service> getService(@NonNull ServiceQuery service) throws ServiceDiscoveryException {
+    try {
+      HealthClient hc = client.healthClient();
+      QueryOptions queryOptions = ImmutableQueryOptions.builder()
+          .addAllTag(service.getTags())
+          .build();
+      List<ServiceHealth> services = hc.getHealthyServiceInstances(service.getName(), queryOptions).getResponse();
+      if (services.isEmpty()) {
+        throw new ServiceNotFoundException("Could not find service " + service);
+      }
+      List<Service> healthyServices = new ArrayList<>(services.size());
+      for (ServiceHealth s : services) {
+        healthyServices.add(Service.of(
+            s.getService().getService(),
+            s.getNode().getAddress(),
+            s.getService().getPort()));
+      }
+      return healthyServices;
+    } catch (ConsulException ex) {
+      throw new ServiceDiscoveryGenericException(ex);
     }
-    List<Service> healthyServices = new ArrayList<>(services.size());
-    for (ServiceHealth s : services) {
-      healthyServices.add(Service.of(
-          s.getService().getService(),
-          s.getNode().getAddress(),
-          s.getService().getPort()));
-    }
-    return healthyServices;
   }
   
   @Override

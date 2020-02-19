@@ -17,9 +17,11 @@
  */
 package com.logicalclocks.servicediscoverclient;
 
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import com.logicalclocks.servicediscoverclient.resolvers.DnsResolver;
 import com.logicalclocks.servicediscoverclient.resolvers.HttpResolver;
 import com.logicalclocks.servicediscoverclient.resolvers.Type;
+import com.orbitz.consul.Consul;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
@@ -33,6 +35,7 @@ public final class Builder {
   private Boolean https = false;
   private SSLContext sslContext;
   private HostnameVerifier hostnameVerifier;
+  private Consul client;
   
   public Builder(Type resolverType) {
     this.resolverType = resolverType;
@@ -63,6 +66,11 @@ public final class Builder {
     return this;
   }
   
+  public Builder withClient(Consul client) {
+    this.client = client;
+    return this;
+  }
+  
   public String getHttpHost() {
     return httpHost;
   }
@@ -83,14 +91,23 @@ public final class Builder {
     return hostnameVerifier;
   }
   
-  public ServiceDiscoveryClient build() {
+  public Consul getClient() {
+    return client;
+  }
+  
+  public ServiceDiscoveryClient build() throws ServiceDiscoveryException  {
+    ServiceDiscoveryClient client;
     switch (resolverType) {
       case DNS:
-        return new DnsResolver(this);
+        client = new DnsResolver();
+        break;
       case HTTP:
-        return new HttpResolver(this);
-        default:
-          throw new RuntimeException("Unknown service discovery resolver type: " + resolverType);
+        client = new HttpResolver();
+        break;
+      default:
+        throw new RuntimeException("Unknown service discovery resolver type: " + resolverType);
     }
+    client.init(this);
+    return client;
   }
 }

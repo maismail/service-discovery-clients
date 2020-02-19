@@ -15,10 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.logicalclocks.servicediscoverclient.resolvers;
+package com.logicalclocks.servicediscoverclient.exceptions;
 
-public class ServiceNotFoundException extends Exception {
-  public ServiceNotFoundException(String message) {
+public class ServiceDiscoveryException extends Exception {
+  public ServiceDiscoveryException(String message) {
     super(message);
+  }
+  
+  public ServiceDiscoveryException(Throwable throwable) {
+    super(throwable);
+  }
+  
+  public ServiceDiscoveryException(String message, Throwable throwable) {
+    super(message, throwable);
   }
 }

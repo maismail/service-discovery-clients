@@ -15,16 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.logicalclocks.servicediscoverclient;
+package com.logicalclocks.servicediscoverclient.exceptions;
 
-import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
-import com.logicalclocks.servicediscoverclient.service.Service;
-import com.logicalclocks.servicediscoverclient.service.ServiceQuery;
-
-import java.util.List;
-
-public interface ServiceDiscoveryClient {
-  void init(Builder builder) throws ServiceDiscoveryException;
-  List<Service> getService(ServiceQuery service) throws ServiceDiscoveryException;
-  void close();
+public class ServiceNotFoundException extends ServiceDiscoveryException {
+  public ServiceNotFoundException(String message) {
+    super(message);
+  }
 }

@@ -19,6 +19,8 @@ package com.logicalclocks.servicediscoverclient.resolvers;
 
 import com.logicalclocks.servicediscoverclient.Builder;
 import com.logicalclocks.servicediscoverclient.ServiceDiscoveryClient;
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryGenericException;
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceNotFoundException;
 import com.logicalclocks.servicediscoverclient.service.Service;
 import com.logicalclocks.servicediscoverclient.service.ServiceQuery;
 import lombok.NonNull;
@@ -26,7 +28,12 @@ import lombok.NonNull;
 import java.util.List;
 
 public final class DnsResolver implements ServiceDiscoveryClient {
-  public DnsResolver(Builder builder) {
+  public DnsResolver() {
+  }
+  
+  @Override
+  public void init(@NonNull Builder builder) throws ServiceDiscoveryGenericException {
+  
   }
   
   @Override
