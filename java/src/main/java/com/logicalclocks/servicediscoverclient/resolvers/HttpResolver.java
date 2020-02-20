@@ -31,9 +31,9 @@ import com.orbitz.consul.HealthClient;
 import com.orbitz.consul.model.health.ServiceHealth;
 import com.orbitz.consul.option.ImmutableQueryOptions;
 import com.orbitz.consul.option.QueryOptions;
-import com.sun.xml.internal.ws.Closeable;
 import lombok.NonNull;
 
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.List;
 
