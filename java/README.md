@@ -9,6 +9,7 @@ There are two available resolvers.
 ## Table of contents
 1. [Installation](#installation)
 2. [Usage](#usage)
+3. [Testing](#testing)
 
 ## Installation
 To use the library include the dependency in your `pom.xml` file
@@ -88,3 +89,30 @@ ServiceDiscoveryClient client = null;
       }
     }
 ```
+
+## Testing
+There are tests that run against a real Consul installation in addition to
+mocked tests. For the real tests to run you need the following.
+
+### HTTP API tests
+If you have secured Consul REST API with TLS copy the valid keystores and the
+password to unlock them in:
+
+* `/tmp/keystore.jks`
+* `/tmp/truststore.jks`
+* `/tmp/passphrase`
+
+Assuming that the Consul agent runs on `my-remote-machine` and on port `8501` create
+an SSH tunnel `ssh -L8501:localhost:8501 user@my-remote-machine`
+
+### DNS tests
+To run tests against a properly configured Consul installation at `my-remote-machine`
+you need to:
+
+1. `server# socat tcp4-listen:15353,reuseaddr,fork,bind=127.0.0.1 UDP:127.0.0.1:53`
+2. `client# ssh -L 15353:localhost:15353 user@my-remote-machine`
+3. `client# socat udp4-listen:5453,reuseaddr,fork tcp:localhost:15353`
+
+Then any DNS request made to `127.0.0.1:5453` will be routed to the remote.
+
+If none of the above hold, the tests will be skipped and only the mocked will run.
