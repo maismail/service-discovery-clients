@@ -33,11 +33,10 @@ import com.orbitz.consul.option.ImmutableQueryOptions;
 import com.orbitz.consul.option.QueryOptions;
 import lombok.NonNull;
 
-import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class HttpResolver implements ServiceDiscoveryClient, Closeable {
+public final class HttpResolver implements ServiceDiscoveryClient {
   private Consul client;
   
   
