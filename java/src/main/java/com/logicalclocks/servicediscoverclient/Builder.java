@@ -30,12 +30,17 @@ import javax.net.ssl.SSLContext;
 public final class Builder {
   private final Type resolverType;
   
+  // For HTTP
   private String httpHost = "localhost";
   private Integer httpPort = 8500;
   private Boolean https = false;
   private SSLContext sslContext;
   private HostnameVerifier hostnameVerifier;
   private Consul client;
+  
+  // For DNS
+  private String dnsHost = "127.0.0.1";
+  private Integer dnsPort = 53;
   
   public Builder(Type resolverType) {
     this.resolverType = resolverType;
@@ -71,6 +76,16 @@ public final class Builder {
     return this;
   }
   
+  public Builder withDnsHost(String dnsHost) {
+    this.dnsHost = dnsHost;
+    return this;
+  }
+  
+  public Builder withDnsPort(Integer dnsPort) {
+    this.dnsPort = dnsPort;
+    return this;
+  }
+  
   public String getHttpHost() {
     return httpHost;
   }
@@ -93,6 +108,14 @@ public final class Builder {
   
   public Consul getClient() {
     return client;
+  }
+  
+  public String getDnsHost() {
+    return dnsHost;
+  }
+  
+  public Integer getDnsPort() {
+    return dnsPort;
   }
   
   public ServiceDiscoveryClient build() throws ServiceDiscoveryException  {
