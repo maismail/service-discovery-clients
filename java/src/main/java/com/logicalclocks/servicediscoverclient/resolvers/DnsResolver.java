@@ -18,6 +18,7 @@
 package com.logicalclocks.servicediscoverclient.resolvers;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import com.logicalclocks.servicediscoverclient.Builder;
 import com.logicalclocks.servicediscoverclient.ServiceDiscoveryClient;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
@@ -39,8 +40,9 @@ import org.xbill.DNS.Type;
 import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 public final class DnsResolver implements ServiceDiscoveryClient {
   private Resolver resolver;
@@ -55,37 +57,47 @@ public final class DnsResolver implements ServiceDiscoveryClient {
   }
   
   @Override
-  public List<Service> getService(@NonNull ServiceQuery service) throws ServiceDiscoveryException {
+  public Stream<Service> getService(@NonNull ServiceQuery service) throws ServiceDiscoveryException {
     if (resolver == null) {
       throw new ServiceDiscoveryGenericException("DNS resolver has not been initialized");
     }
+    
     try {
-      Lookup SRVLookup = lookup(Name.fromString(service.getName()), Type.SRV);
-      if (SRVLookup.getResult() == Lookup.SUCCESSFUL) {
-        Record[] SRVRecords = SRVLookup.getAnswers();
-        ArrayList<Service> services = new ArrayList<>(SRVRecords.length);
-        for (Record r : SRVRecords) {
-          if (r.getType() == Type.SRV) {
-            SRVRecord srv = (SRVRecord) r;
-            Integer port = srv.getPort();
-            Lookup ALookup = lookup(srv.getTarget(), Type.A);
-            Record[] ARecords = ALookup.getAnswers();
-            if (ARecords.length > 0) {
-              Record record = ARecords[0];
-              if (record.getType() == Type.A) {
-                ARecord ARecord = (org.xbill.DNS.ARecord) record;
-                String address = ARecord.getAddress().getHostAddress();
-                services.add(Service.of(service.getName(), address, port));
-              }
+      List<Record> SRVRecords = getSRVRecords(service);
+      return SRVRecords.stream()
+          .filter(r -> r.getType() == Type.SRV)
+          .map(r -> (SRVRecord) r)
+          .map(srv -> {
+            String aRecord = getARecord(srv);
+            if (aRecord == null) {
+              return null;
             }
-          }
-        }
-        return services;
-      }
-      throw new ServiceNotFoundException("Error: " + SRVLookup.getErrorString() + " Could not find service " + service);
+            return Service.of(service.getName(), aRecord, srv.getPort());
+          })
+          .filter(Objects::nonNull);
     } catch (TextParseException ex) {
       throw new ServiceDiscoveryGenericException(ex);
     }
+  }
+  
+  private List<Record> getSRVRecords(ServiceQuery service) throws TextParseException, ServiceNotFoundException {
+    Lookup lookup = lookup(Name.fromString(service.getName()), Type.SRV);
+    if (lookup.getResult() != Lookup.SUCCESSFUL) {
+      throw new ServiceNotFoundException("Error: " + lookup.getErrorString() + " Could not find service " + service);
+    }
+    return Lists.newArrayList(lookup.getAnswers());
+  }
+  
+  private String getARecord(SRVRecord srvRecord) {
+    Lookup lookup = lookup(srvRecord.getTarget(), Type.A);
+    Record[] aRecords = lookup.getAnswers();
+    for (Record r : aRecords) {
+      if (r.getType() == Type.A) {
+        ARecord aRecord = (ARecord) r;
+        return aRecord.getAddress().getHostAddress();
+      }
+    }
+    return null;
   }
   
   @VisibleForTesting

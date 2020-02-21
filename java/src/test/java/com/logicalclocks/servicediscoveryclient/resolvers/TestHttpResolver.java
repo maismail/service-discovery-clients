@@ -52,6 +52,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.api.Assertions.*;
@@ -89,9 +90,9 @@ public class TestHttpResolver {
           }
         })
         .build();
-    List<Service> namenodes = client.getService(ServiceQuery.of("namenode", Collections.emptySet()));
+    Stream<Service> namenodes = client.getService(ServiceQuery.of("namenode", Collections.emptySet()));
     assertNotNull(namenodes);
-    assertFalse(namenodes.isEmpty());
+    assertTrue(namenodes.count() > 0);
   }
   
   @Test
@@ -113,9 +114,9 @@ public class TestHttpResolver {
         .build();
     Set<String> tags = new HashSet<>();
     tags.add("rpc");
-    List<Service> namenodes = client.getService(ServiceQuery.of("namenode", tags));
+    Stream<Service> namenodes = client.getService(ServiceQuery.of("namenode", tags));
     assertNotNull(namenodes);
-    assertFalse(namenodes.isEmpty());
+    assertTrue(namenodes.count() > 0);
   }
   
   @Test
@@ -168,16 +169,17 @@ public class TestHttpResolver {
         .build();
     
     ServiceQuery sq = ServiceQuery.of("service0", Collections.emptySet());
-    List<Service> reply = client.getService(sq);
+    Stream<Service> reply = client.getService(sq);
     assertNotNull(reply);
-    assertEquals(2, reply.size());
-    for (Service s : reply) {
+    long count = reply.map(s -> {
       String serviceAddress = s.getAddress();
       ServiceHealth sh = serviceHealthMap.get(serviceAddress);
       assertNotNull(sh);
       assertEquals(sh.getService().getService(), s.getName());
       assertEquals(Integer.valueOf(sh.getService().getPort()), s.getPort());
-    }
+      return s;
+    }).count();
+    assertEquals(2, count);
   }
   
   @Test

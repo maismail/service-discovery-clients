@@ -21,10 +21,10 @@ import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryExcept
 import com.logicalclocks.servicediscoverclient.service.Service;
 import com.logicalclocks.servicediscoverclient.service.ServiceQuery;
 
-import java.util.List;
+import java.util.stream.Stream;
 
 public interface ServiceDiscoveryClient {
   void init(Builder builder) throws ServiceDiscoveryException;
-  List<Service> getService(ServiceQuery service) throws ServiceDiscoveryException;
+  Stream<Service> getService(ServiceQuery service) throws ServiceDiscoveryException;
   void close();
 }

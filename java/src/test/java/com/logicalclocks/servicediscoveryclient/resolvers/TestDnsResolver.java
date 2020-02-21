@@ -37,8 +37,8 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.api.Assertions.*;
@@ -55,9 +55,9 @@ public class TestDnsResolver {
         .withDnsHost(DNS_IP)
         .withDnsPort(DNS_PORT)
         .build();
-    List<Service> services = client.getService(ServiceQuery.of("namenode.service.lc", Collections.emptySet()));
+    Stream<Service> services = client.getService(ServiceQuery.of("namenode.service.lc", Collections.emptySet()));
     assertNotNull(services);
-    assertFalse(services.isEmpty());
+    assertTrue(services.count() > 0);
   }
   
   @Test
@@ -130,14 +130,15 @@ public class TestDnsResolver {
     when(client.lookup(eq(Name.fromString(target1)), eq(org.xbill.DNS.Type.A)))
         .thenReturn(mockedALookup1);
     
-    List<Service> answer = client.getService(ServiceQuery.of(service, Collections.emptySet()));
+    Stream<Service> answer = client.getService(ServiceQuery.of(service, Collections.emptySet()));
     assertNotNull(answer);
-    assertFalse(answer.isEmpty());
-    for (Service s : answer) {
+    long count = answer.map(s -> {
       Service expectedService = expectedServicesMap.get(s.getAddress());
       assertNotNull(expectedService);
       assertEquals(expectedService, s);
-    }
+      return s;
+    }).count();
+    assertEquals(2, count);
   }
   
   @Test

@@ -33,8 +33,8 @@ import com.orbitz.consul.option.ImmutableQueryOptions;
 import com.orbitz.consul.option.QueryOptions;
 import lombok.NonNull;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 public final class HttpResolver implements ServiceDiscoveryClient {
   private Consul client;
@@ -67,27 +67,32 @@ public final class HttpResolver implements ServiceDiscoveryClient {
   }
   
   @Override
-  public List<Service> getService(@NonNull ServiceQuery service) throws ServiceDiscoveryException {
+  public Stream<Service> getService(@NonNull ServiceQuery service) throws ServiceDiscoveryException {
+    QueryOptions queryOptions = ImmutableQueryOptions.builder()
+        .addAllTag(service.getTags())
+        .build();
+    List<ServiceHealth> serviceHealths = getServiceHealth(service.getName(), queryOptions);
+    if (serviceHealths.isEmpty()) {
+      throw new ServiceNotFoundException("Could not find service " + service);
+    }
+  
+    return serviceHealths.stream().map(this::convertToService);
+  }
+  
+  private List<ServiceHealth> getServiceHealth(String name, QueryOptions queryOptions)
+      throws ServiceDiscoveryGenericException{
     try {
       HealthClient hc = client.healthClient();
-      QueryOptions queryOptions = ImmutableQueryOptions.builder()
-          .addAllTag(service.getTags())
-          .build();
-      List<ServiceHealth> services = hc.getHealthyServiceInstances(service.getName(), queryOptions).getResponse();
-      if (services.isEmpty()) {
-        throw new ServiceNotFoundException("Could not find service " + service);
-      }
-      List<Service> healthyServices = new ArrayList<>(services.size());
-      for (ServiceHealth s : services) {
-        healthyServices.add(Service.of(
-            s.getService().getService(),
-            s.getNode().getAddress(),
-            s.getService().getPort()));
-      }
-      return healthyServices;
+      return hc.getHealthyServiceInstances(name, queryOptions).getResponse();
     } catch (ConsulException ex) {
       throw new ServiceDiscoveryGenericException(ex);
     }
+  }
+  
+  private Service convertToService(ServiceHealth serviceHealth) {
+    return Service.of(serviceHealth.getService().getService(),
+        serviceHealth.getNode().getAddress(),
+        serviceHealth.getService().getPort());
   }
   
   @Override
