@@ -28,7 +28,8 @@ using the DNS interface and `SRV` records. The HTTP API is more expressive
 as it can filter services also with a set of tags.
 
 Both methods share a common interface and you can create them using the
-provided `Builder`.
+provided `Builder`. Both methods will return a Stream of services registered
+with Consul.
 
 ### HTTP API
 
@@ -53,7 +54,8 @@ ServiceDiscoveryClient client = null;
       
       Set<String> tags = new HashSet<>(Arrays.asList("tag0", "tag1"));
       List<Service> services = client.getService(
-          ServiceQuery.of("my-service-name", tags));
+          ServiceQuery.of("my-service-name", tags))
+          .collect(Collectors.toList());
     } catch (ServiceDiscoveryException ex) {
       // Handle exception
     } finally {
@@ -71,6 +73,9 @@ you can use DNS to query Consul, provided that it's configured correctly.
 The API is the same. One **important** difference is that the service name
 should be the FQDN of the service. Also, you can't query with tags.
 
+In the following example we take the first service registered with
+`my-service-name.service.domain` domain name.
+
 ```java
 ServiceDiscoveryClient client = null;
     try {
@@ -79,8 +84,9 @@ ServiceDiscoveryClient client = null;
           .withDnsPort(53)
           .build();
       
-      List<Service> services = client.getService(
-          ServiceQuery.of("my-service-name.service.domain", Collections.emptySet()));
+      Optional<Service> service = client.getService(
+          ServiceQuery.of("my-service-name.service.domain", Collections.emptySet()))
+          .findFirst();
     } catch (ServiceDiscoveryException ex) {
       // Handle exception
     } finally {
