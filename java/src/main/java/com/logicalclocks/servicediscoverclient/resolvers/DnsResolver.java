@@ -27,19 +27,11 @@ import com.logicalclocks.servicediscoverclient.exceptions.ServiceNotFoundExcepti
 import com.logicalclocks.servicediscoverclient.service.Service;
 import com.logicalclocks.servicediscoverclient.service.ServiceQuery;
 import lombok.NonNull;
-import org.xbill.DNS.ARecord;
-import org.xbill.DNS.Lookup;
-import org.xbill.DNS.Name;
-import org.xbill.DNS.Record;
-import org.xbill.DNS.Resolver;
-import org.xbill.DNS.SRVRecord;
-import org.xbill.DNS.SimpleResolver;
-import org.xbill.DNS.TextParseException;
 import org.xbill.DNS.Type;
+import org.xbill.DNS.*;
 
 import java.net.InetSocketAddress;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -52,8 +44,13 @@ public final class DnsResolver implements ServiceDiscoveryClient {
   
   @Override
   public void init(@NonNull Builder builder) throws ServiceDiscoveryGenericException {
-      resolver = new SimpleResolver(new InetSocketAddress(builder.getDnsHost(), builder.getDnsPort()));
-      resolver.setTimeout(Duration.of(2, ChronoUnit.SECONDS));
+    try {
+      resolver = new SimpleResolver();
+      ((SimpleResolver) resolver).setAddress(new InetSocketAddress(builder.getDnsHost(), builder.getDnsPort()));
+      resolver.setTimeout(4);
+    } catch (UnknownHostException ex) {
+      throw new ServiceDiscoveryGenericException(ex);
+    }
   }
   
   @Override
