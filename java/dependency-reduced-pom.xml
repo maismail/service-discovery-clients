@@ -44,6 +44,15 @@
       </plugin>
     </plugins>
   </build>
+  <repositories>
+    <repository>
+      <releases />
+      <snapshots />
+      <id>hops-repository</id>
+      <name>Hops Repository</name>
+      <url>https://bbc1.sics.se/archiva/repository/Hops/</url>
+    </repository>
+  </repositories>
   <dependencies>
     <dependency>
       <groupId>org.projectlombok</groupId>
@@ -98,4 +107,11 @@
       </exclusions>
     </dependency>
   </dependencies>
+  <distributionManagement>
+    <repository>
+      <id>Hops</id>
+      <name>Hopsworks Maven repository</name>
+      <url>https://bbc1.sics.se/archiva/repository/Hops/</url>
+    </repository>
+  </distributionManagement>
 </project>
