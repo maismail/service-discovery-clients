@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-public final class DnsResolver implements ServiceDiscoveryClient {
+public class DnsResolver implements ServiceDiscoveryClient {
   private Resolver resolver;
   
   public DnsResolver() {

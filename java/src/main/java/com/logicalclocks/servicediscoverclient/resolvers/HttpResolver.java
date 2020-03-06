@@ -36,7 +36,7 @@ import lombok.NonNull;
 import java.util.List;
 import java.util.stream.Stream;
 
-public final class HttpResolver implements ServiceDiscoveryClient {
+public class HttpResolver implements ServiceDiscoveryClient {
   private Consul client;
   
   

@@ -27,7 +27,7 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 
 
-public final class Builder {
+public class Builder {
   private final Type resolverType;
   
   // For HTTP
