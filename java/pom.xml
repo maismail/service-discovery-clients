@@ -85,6 +85,11 @@
                 </relocation>-->
 
                 <relocation>
+                  <pattern>com.google.common</pattern>
+                  <shadedPattern>com.shaded.google.common</shadedPattern>
+                </relocation>
+
+                <relocation>
                   <pattern>org.slf4j</pattern>
                   <shadedPattern>org.shaded.slf4j</shadedPattern>
                 </relocation>
