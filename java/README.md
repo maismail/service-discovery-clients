@@ -96,6 +96,44 @@ ServiceDiscoveryClient client = null;
     }
 ```
 
+### Caching
+
+`CachingResolver` is a Type of Resolver wrapping around the HTTP and DNS API and caching results for a configurable period
+of time. When building the `CachingResolver` you can pass the underline resolver to use, otherwise it will default
+to DNS queries on the local nameserver on port 53.
+
+For example to create a caching client using the HTTP API see the snippet below. Mind the `Type.CACHING` when
+building the cached client. In the following example the results will be invalidated after 30 seconds.
+
+```java
+ServiceDiscoveryClient client = null;
+    try {
+      ServiceDiscoveryClient httpClient = new Builder(Type.HTTP)
+              .withHttpHost("localhost")
+              .withHttpPort(8501)
+              .withHttps()
+              .withHostnameVerifier(allowAllHostnameVerifier)
+              .withSSLContext(sslContextWithConfiguredKeystores)
+              .build();
+      
+      client = new Builder(Type.CACHING)
+              .withServiceDiscoveryClient(httpClient)
+              .withCacheExpiration(Duration.of(30, ChronoUnit.SECONDS))
+              .build();
+
+      Set<String> tags = new HashSet<>(Arrays.asList("tag0", "tag1"));
+      List<Service> services = client.getService(
+              ServiceQuery.of("my-service-name", tags))
+              .collect(Collectors.toList());
+    } catch (ServiceDiscoveryException ex) {
+      // Handle exception
+    } finally {
+      if (client != null) {
+        client.close();
+      }
+    }
+```
+
 ## Testing
 There are tests that run against a real Consul installation in addition to
 mocked tests. For the real tests to run you need the following.
