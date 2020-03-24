@@ -19,5 +19,6 @@ package com.logicalclocks.servicediscoverclient.resolvers;
 
 public enum Type {
   DNS,
-  HTTP
+  HTTP,
+  CACHING
 }

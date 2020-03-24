@@ -18,6 +18,7 @@
 package com.logicalclocks.servicediscoverclient;
 
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import com.logicalclocks.servicediscoverclient.resolvers.CachingResolver;
 import com.logicalclocks.servicediscoverclient.resolvers.DnsResolver;
 import com.logicalclocks.servicediscoverclient.resolvers.HttpResolver;
 import com.logicalclocks.servicediscoverclient.resolvers.Type;
@@ -25,6 +26,8 @@ import com.orbitz.consul.Consul;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 
 
 public class Builder {
@@ -41,6 +44,10 @@ public class Builder {
   // For DNS
   private String dnsHost = "127.0.0.1";
   private Integer dnsPort = 53;
+
+  // For caching
+  private ServiceDiscoveryClient serviceDiscoveryClient;
+  private Duration cacheExpiration = Duration.of(1, ChronoUnit.MINUTES);
   
   public Builder(Type resolverType) {
     this.resolverType = resolverType;
@@ -85,6 +92,16 @@ public class Builder {
     this.dnsPort = dnsPort;
     return this;
   }
+
+  public Builder withServiceDiscoveryClient(ServiceDiscoveryClient serviceDiscoveryClient) {
+    this.serviceDiscoveryClient = serviceDiscoveryClient;
+    return this;
+  }
+
+  public Builder withCacheExpiration(Duration cacheExpiration) {
+    this.cacheExpiration = cacheExpiration;
+    return this;
+  }
   
   public String getHttpHost() {
     return httpHost;
@@ -117,6 +134,14 @@ public class Builder {
   public Integer getDnsPort() {
     return dnsPort;
   }
+
+  public ServiceDiscoveryClient getServiceDiscoveryClient() {
+    return serviceDiscoveryClient;
+  }
+
+  public Duration getCacheExpiration() {
+    return cacheExpiration;
+  }
   
   public ServiceDiscoveryClient build() throws ServiceDiscoveryException  {
     ServiceDiscoveryClient client;
@@ -126,6 +151,9 @@ public class Builder {
         break;
       case HTTP:
         client = new HttpResolver();
+        break;
+      case CACHING:
+        client = new CachingResolver();
         break;
       default:
         throw new RuntimeException("Unknown service discovery resolver type: " + resolverType);
