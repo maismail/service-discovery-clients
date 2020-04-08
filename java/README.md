@@ -71,7 +71,10 @@ When HTTP is not an option or you don't have access to the required keystores
 you can use DNS to query Consul, provided that it's configured correctly.
 
 The API is the same. One **important** difference is that the service name
-should be the FQDN of the service. Also, you can't query with tags.
+should be the FQDN of the service. Also, you can't query with tags. By default
+it will use the nameserver configured for your system e.g. `/etc/resolv.conf`
+for *nix. If you want to provide another nameserver use the `Builder` methods
+`withDnsHost` and `withDnsPort` - **both** must be set.
 
 In the following example we take the first service registered with
 `my-service-name.service.domain` domain name.
