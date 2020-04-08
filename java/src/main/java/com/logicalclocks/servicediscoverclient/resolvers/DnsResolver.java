@@ -45,12 +45,12 @@ public class DnsResolver implements ServiceDiscoveryClient {
     try {
       resolver = new SimpleResolver();
       if (builder.getDnsHost() == null || builder.getDnsPort() == null) {
-        String[] nameservers = ResolverConfig.getCurrentConfig().servers();
-        if (nameservers == null || nameservers.length == 0) {
+        List<InetSocketAddress> nameservers = ResolverConfig.getCurrentConfig().servers();
+        if (nameservers == null || nameservers.isEmpty()) {
           throw new ServiceDiscoveryGenericException("Unable to find system's nameservers. Check your resolver file " +
                   "or explicitly set DNS host and port in builder");
         }
-        ((SimpleResolver) resolver).setAddress(new InetSocketAddress(nameservers[0], 53));
+        ((SimpleResolver) resolver).setAddress(nameservers.get(0));
       } else {
         ((SimpleResolver) resolver).setAddress(new InetSocketAddress(builder.getDnsHost(), builder.getDnsPort()));
       }

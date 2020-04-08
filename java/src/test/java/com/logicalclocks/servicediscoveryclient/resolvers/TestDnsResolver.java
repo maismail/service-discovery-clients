@@ -142,9 +142,7 @@ public class TestDnsResolver {
   @Test
   public void testUnhealthyServiceMock() throws Exception {
     String service = "thisservicedoesnotexist.lc";
-    Builder resolverBuilder = new Builder(Type.DNS)
-        .withDnsHost("localhost")
-        .withDnsPort(53);
+    Builder resolverBuilder = new Builder(Type.DNS);
     DnsResolver client = mock(DnsResolver.class);
     doCallRealMethod().when(client).init(any(Builder.class));
     when(client.getService(any())).thenCallRealMethod();
