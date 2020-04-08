@@ -44,7 +44,16 @@ public class DnsResolver implements ServiceDiscoveryClient {
   public void init(@NonNull Builder builder) throws ServiceDiscoveryGenericException {
     try {
       resolver = new SimpleResolver();
-      ((SimpleResolver) resolver).setAddress(new InetSocketAddress(builder.getDnsHost(), builder.getDnsPort()));
+      if (builder.getDnsHost() == null || builder.getDnsPort() == null) {
+        String[] nameservers = ResolverConfig.getCurrentConfig().servers();
+        if (nameservers == null || nameservers.length == 0) {
+          throw new ServiceDiscoveryGenericException("Unable to find system's nameservers. Check your resolver file " +
+                  "or explicitly set DNS host and port in builder");
+        }
+        ((SimpleResolver) resolver).setAddress(new InetSocketAddress(nameservers[0], 53));
+      } else {
+        ((SimpleResolver) resolver).setAddress(new InetSocketAddress(builder.getDnsHost(), builder.getDnsPort()));
+      }
       resolver.setTimeout(4);
     } catch (UnknownHostException ex) {
       throw new ServiceDiscoveryGenericException(ex);
