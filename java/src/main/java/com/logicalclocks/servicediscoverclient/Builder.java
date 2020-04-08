@@ -40,8 +40,8 @@ public class Builder {
   private Consul client;
   
   // For DNS
-  private String dnsHost = "127.0.0.1";
-  private Integer dnsPort = 53;
+  private String dnsHost = null;
+  private Integer dnsPort = null;
 
   // For caching
   private ServiceDiscoveryClient serviceDiscoveryClient;
