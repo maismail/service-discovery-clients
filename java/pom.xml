@@ -8,16 +8,26 @@
   <artifactId>service-discovery-client</artifactId>
   <version>0.3</version>
 
+  <properties>
+    <shaded.dependency.prefix>com.logicalclocks.shaded</shaded.dependency.prefix>
+  </properties>
+  
   <dependencies>
     <dependency>
       <groupId>com.orbitz.consul</groupId>
       <artifactId>consul-client</artifactId>
       <version>1.4.0</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.google.code.findbugs</groupId>
+          <artifactId>jsr305</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>dnsjava</groupId>
       <artifactId>dnsjava</artifactId>
-      <version>2.1.9</version>
+      <version>3.0.2</version>
     </dependency>
     <dependency>
       <groupId>org.projectlombok</groupId>
@@ -73,25 +83,63 @@
               <goal>shade</goal>
             </goals>
             <configuration>
+              <artifactSet>
+                <excludes>
+                  <!--Leave slf4j unshaded so downstream users can configure logging.--> 
+                  <exclude>org.slf4j:slf4j-api</exclude>
+                </excludes>
+              </artifactSet>
+            
               <relocations>
                 <relocation>
-                  <pattern>com.fasterxml.jackson</pattern>
-                  <shadedPattern>com.shaded.fasterxml.jackson</shadedPattern>
+                  <pattern>org/</pattern>
+                  <shadedPattern>${shaded.dependency.prefix}.org.</shadedPattern>
+                  <excludes>
+                    <!--Our non-shaded logging libraries--> 
+                    <exclude>org/slf4j/*</exclude>
+                    <exclude>org/slf4j/**/*</exclude>
+                    <exclude>**/pom.xml</exclude>
+                    <!--Not the org/ packages that are a part of the jdk--> 
+                    <exclude>org/ietf/jgss/*</exclude>
+                    <exclude>org/omg/**/*</exclude>
+                    <exclude>org/w3c/dom/*</exclude>
+                    <exclude>org/w3c/dom/**/*</exclude>
+                    <exclude>org/xml/sax/*</exclude>
+                    <exclude>org/xml/sax/**/*</exclude>
+                    <exclude>org/xbill/*</exclude>
+                  </excludes>
                 </relocation>
-
-                <!--<relocation>
-                  <pattern>com.squareup.okhttp3</pattern>
-                  <shadedPattern>com.shaded.squareup.okhttp3</shadedPattern>
-                </relocation>-->
-
                 <relocation>
-                  <pattern>com.google.common</pattern>
-                  <shadedPattern>com.shaded.google.common</shadedPattern>
+                  <pattern>com/</pattern>
+                  <shadedPattern>${shaded.dependency.prefix}.com.</shadedPattern>
+                  <excludes>
+                    <exclude>com/logicalclocks/*</exclude>
+                    <exclude>com/logicalclocks/**/*</exclude>
+                    <!--Not the com/ packages that are a part of particular jdk implementations--> 
+                    <exclude>com/sun/tools/*</exclude>
+                    <exclude>com/sun/javadoc/*</exclude>
+                    <exclude>com/sun/security/*</exclude>
+                    <exclude>com/sun/jndi/*</exclude>
+                    <exclude>com/sun/management/*</exclude>
+                    <exclude>com/sun/tools/**/*</exclude>
+                    <exclude>com/sun/javadoc/**/*</exclude>
+                    <exclude>com/sun/security/**/*</exclude>
+                    <exclude>com/sun/jndi/**/*</exclude>
+                    <exclude>com/sun/management/**/*</exclude>
+                  </excludes>
                 </relocation>
-
+                <!--declares a top level package instead of nested--> 
                 <relocation>
-                  <pattern>org.slf4j</pattern>
-                  <shadedPattern>org.shaded.slf4j</shadedPattern>
+                  <pattern>okio/</pattern>
+                  <shadedPattern>${shaded.dependency.prefix}.okio.</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>okhttp3/</pattern>
+                  <shadedPattern>${shaded.dependency.prefix}.okhttp3.</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>retrofit2/</pattern>
+                  <shadedPattern>${shaded.dependency.prefix}.retrofit2.</shadedPattern>
                 </relocation>
               </relocations>
             </configuration>

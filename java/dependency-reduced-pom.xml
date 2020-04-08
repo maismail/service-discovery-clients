@@ -28,18 +28,57 @@
               <goal>shade</goal>
             </goals>
             <configuration>
+              <artifactSet>
+                <excludes>
+                  <exclude>org.slf4j:slf4j-api</exclude>
+                </excludes>
+              </artifactSet>
               <relocations>
                 <relocation>
-                  <pattern>com.fasterxml.jackson</pattern>
-                  <shadedPattern>com.shaded.fasterxml.jackson</shadedPattern>
+                  <pattern>org/</pattern>
+                  <shadedPattern>${shaded.dependency.prefix}.org.</shadedPattern>
+                  <excludes>
+                    <exclude>org/slf4j/*</exclude>
+                    <exclude>org/slf4j/**/*</exclude>
+                    <exclude>**/pom.xml</exclude>
+                    <exclude>org/ietf/jgss/*</exclude>
+                    <exclude>org/omg/**/*</exclude>
+                    <exclude>org/w3c/dom/*</exclude>
+                    <exclude>org/w3c/dom/**/*</exclude>
+                    <exclude>org/xml/sax/*</exclude>
+                    <exclude>org/xml/sax/**/*</exclude>
+                    <exclude>org/xbill/*</exclude>
+                  </excludes>
                 </relocation>
                 <relocation>
-                  <pattern>com.google.common</pattern>
-                  <shadedPattern>com.shaded.google.common</shadedPattern>
+                  <pattern>com/</pattern>
+                  <shadedPattern>${shaded.dependency.prefix}.com.</shadedPattern>
+                  <excludes>
+                    <exclude>com/logicalclocks/*</exclude>
+                    <exclude>com/logicalclocks/**/*</exclude>
+                    <exclude>com/sun/tools/*</exclude>
+                    <exclude>com/sun/javadoc/*</exclude>
+                    <exclude>com/sun/security/*</exclude>
+                    <exclude>com/sun/jndi/*</exclude>
+                    <exclude>com/sun/management/*</exclude>
+                    <exclude>com/sun/tools/**/*</exclude>
+                    <exclude>com/sun/javadoc/**/*</exclude>
+                    <exclude>com/sun/security/**/*</exclude>
+                    <exclude>com/sun/jndi/**/*</exclude>
+                    <exclude>com/sun/management/**/*</exclude>
+                  </excludes>
                 </relocation>
                 <relocation>
-                  <pattern>org.slf4j</pattern>
-                  <shadedPattern>org.shaded.slf4j</shadedPattern>
+                  <pattern>okio/</pattern>
+                  <shadedPattern>${shaded.dependency.prefix}.okio.</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>okhttp3/</pattern>
+                  <shadedPattern>${shaded.dependency.prefix}.okhttp3.</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>retrofit2/</pattern>
+                  <shadedPattern>${shaded.dependency.prefix}.retrofit2.</shadedPattern>
                 </relocation>
               </relocations>
             </configuration>
@@ -118,4 +157,7 @@
       <url>https://bbc1.sics.se/archiva/repository/Hops/</url>
     </repository>
   </distributionManagement>
+  <properties>
+    <shaded.dependency.prefix>com.logicalclocks.shaded</shaded.dependency.prefix>
+  </properties>
 </project>
