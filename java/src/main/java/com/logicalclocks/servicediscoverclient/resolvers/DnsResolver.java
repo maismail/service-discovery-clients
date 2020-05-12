@@ -30,6 +30,7 @@ import org.xbill.DNS.*;
 
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -83,8 +84,29 @@ public class DnsResolver implements ServiceDiscoveryClient {
       throw new ServiceDiscoveryGenericException(ex);
     }
   }
-  
+
   private List<Record> getSRVRecords(ServiceQuery service) throws TextParseException, ServiceNotFoundException {
+    try {
+      return getSRVRecordsInternal(service);
+    } catch (ServiceNotFoundException ex) {
+      ResolverConfig.refresh();
+      List<InetSocketAddress> nameservers = ResolverConfig.getCurrentConfig().servers();
+      Iterator<InetSocketAddress> nsIterator = nameservers.iterator();
+      while (nsIterator.hasNext()) {
+        ((SimpleResolver) resolver).setAddress(nsIterator.next());
+        try {
+          return getSRVRecordsInternal(service);
+        } catch (ServiceNotFoundException ex1) {
+          if (!nsIterator.hasNext()) {
+            throw ex1;
+          }
+        }
+      }
+      throw ex;
+    }
+  }
+
+  private List<Record> getSRVRecordsInternal(ServiceQuery service) throws TextParseException, ServiceNotFoundException {
     Lookup lookup = lookup(Name.fromString(service.getName()), Type.SRV);
     if (lookup.getResult() != Lookup.SUCCESSFUL) {
       throw new ServiceNotFoundException("Error: " + lookup.getErrorString() + " Could not find service " + service);
