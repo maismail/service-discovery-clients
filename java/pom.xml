@@ -6,7 +6,7 @@
 
   <groupId>com.logicalclocks</groupId>
   <artifactId>service-discovery-client</artifactId>
-  <version>0.4-SNAPSHOT</version>
+  <version>0.4</version>
 
   <properties>
     <shaded.dependency.prefix>com.logicalclocks.shaded</shaded.dependency.prefix>
