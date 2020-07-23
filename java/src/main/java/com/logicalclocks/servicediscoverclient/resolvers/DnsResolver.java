@@ -37,7 +37,16 @@ import java.util.stream.Stream;
 
 public class DnsResolver implements ServiceDiscoveryClient {
   private Resolver resolver;
-  
+  private static int[] DCLASS = new int[]{
+          DClass.IN,
+          DClass.CH,
+          DClass.CHAOS,
+          DClass.HS,
+          DClass.HESIOD,
+          DClass.NONE,
+          DClass.ANY
+  };
+
   public DnsResolver() {
   }
   
@@ -86,8 +95,9 @@ public class DnsResolver implements ServiceDiscoveryClient {
   }
 
   private List<Record> getSRVRecords(ServiceQuery service) throws TextParseException, ServiceNotFoundException {
+    Name name = Name.fromString(service.getName());
     try {
-      return getSRVRecordsInternal(service);
+      return getSRVRecordsInternal(name, service);
     } catch (ServiceNotFoundException ex) {
       ResolverConfig.refresh();
       List<InetSocketAddress> nameservers = ResolverConfig.getCurrentConfig().servers();
@@ -95,7 +105,9 @@ public class DnsResolver implements ServiceDiscoveryClient {
       while (nsIterator.hasNext()) {
         ((SimpleResolver) resolver).setAddress(nsIterator.next());
         try {
-          return getSRVRecordsInternal(service);
+          // Invalidate Lookup cache if we don't get an answer
+          invalidateCacheForName(name);
+          return getSRVRecordsInternal(name, service);
         } catch (ServiceNotFoundException ex1) {
           if (!nsIterator.hasNext()) {
             throw ex1;
@@ -106,8 +118,31 @@ public class DnsResolver implements ServiceDiscoveryClient {
     }
   }
 
-  private List<Record> getSRVRecordsInternal(ServiceQuery service) throws TextParseException, ServiceNotFoundException {
-    Lookup lookup = lookup(Name.fromString(service.getName()), Type.SRV);
+  private void invalidateCacheForName(Name name) {
+    try {
+      if (!name.isAbsolute()) {
+        name = Name.concatenate(name, Name.root);
+      }
+      for (int dc : DCLASS) {
+        invalidateDClassCacheForName(name, dc);
+      }
+    } catch (NameTooLongException ex) {
+      // Ignore it
+    }
+  }
+
+  private void invalidateDClassCacheForName(Name name, int dclass) {
+    try {
+        DClass.check(dclass);
+        Lookup.getDefaultCache(dclass).flushName(name);
+    } catch (InvalidDClassException ex) {
+      // Ignore it
+    }
+  }
+
+  private List<Record> getSRVRecordsInternal(Name name, ServiceQuery service)
+          throws TextParseException, ServiceNotFoundException {
+    Lookup lookup = lookup(name, Type.SRV);
     if (lookup.getResult() != Lookup.SUCCESSFUL) {
       throw new ServiceNotFoundException("Error: " + lookup.getErrorString() + " Could not find service " + service);
     }
