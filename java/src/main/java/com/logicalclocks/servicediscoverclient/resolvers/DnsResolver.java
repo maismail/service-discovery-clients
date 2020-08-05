@@ -72,6 +72,15 @@ public class DnsResolver implements ServiceDiscoveryClient {
   
   @Override
   public Stream<Service> getService(@NonNull ServiceQuery service) throws ServiceDiscoveryException {
+    return getService(service, false);
+  }
+  
+  public Stream<Service> getServiceSRVOnly(@NonNull ServiceQuery service) throws ServiceDiscoveryException {
+    return getService(service, true);
+  }
+  
+  private Stream<Service> getService(@NonNull ServiceQuery service,
+      boolean SRVOnly) throws ServiceDiscoveryException {
     if (resolver == null) {
       throw new ServiceDiscoveryGenericException("DNS resolver has not been initialized");
     }
@@ -82,6 +91,10 @@ public class DnsResolver implements ServiceDiscoveryClient {
           .filter(r -> r.getType() == Type.SRV)
           .map(r -> (SRVRecord) r)
           .map(srv -> {
+            if(SRVOnly){
+              return Service.of(service.getName(), srv.getTarget().toString(true),
+                  srv.getPort());
+            }
             String aRecord = getARecord(srv);
             if (aRecord == null) {
               return null;
